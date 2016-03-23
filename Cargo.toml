@@ -8,3 +8,5 @@ name = "credentials-to-env"
 
 [dependencies]
 credentials = "0.2.0"
+errno = "0.1.6"
+libc = "0.2.8"
