@@ -53,7 +53,10 @@ impl From<NulError> for ChmodError {
     }
 }
 
-
+/// Change the permissions of a file.
+///
+/// NOTE: This API is not very good.  It should use Path instead of String,
+/// for example.
 pub fn chmod<S: Into<String>>(path: S, permissions: libc::mode_t) ->
     Result<(), ChmodError>
 {
