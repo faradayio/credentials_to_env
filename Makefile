@@ -9,6 +9,9 @@
 # because it will only rely on an ancient build of libc.
 SANDBOXED = docker run -v `pwd`:/src --rm credentials-to-env-dev
 
+# The name the zip archive we use for binary releases.
+ZIP = credentials-to-env-$(shell git describe --tags)-$(shell uname -s | tr '[:upper:]' '[:lower:]')-$(shell uname -p).zip
+
 all: build
 
 # Build the docker image we'll need for our sandbox.
@@ -17,9 +20,13 @@ image:
 
 # Compile in our sandbox.
 build:
-	cargo build --release
+	$(SANDBOXED) cargo build --release
+
+package: build
+	rm -f $(ZIP)
+	zip -j $(ZIP) target/release/credentials-to-env
 
 clean:
-	rm -f *.so
+	cargo clean
 
-.PHONY: all image build clean
+.PHONY: all image build package clean
