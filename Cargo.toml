@@ -1,0 +1,6 @@
+[package]
+name = "credentials_to_env"
+version = "0.1.0"
+authors = ["Eric Kidd <git@randomhacks.net>"]
+
+[dependencies]
