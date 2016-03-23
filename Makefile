@@ -17,7 +17,7 @@ image:
 
 # Compile in our sandbox.
 build:
-	cargo build
+	cargo build --release
 
 clean:
 	rm -f *.so
