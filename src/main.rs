@@ -7,8 +7,10 @@ use std::env;
 use std::error;
 use std::fs;
 use std::io::{self, Write};
+use std::path::Path;
 use std::process;
 
+mod chmod;
 mod exec;
 
 /// A nice, generic error type which can hold any error returned by any
@@ -29,9 +31,13 @@ fn helper() -> Result<(), Error> {
 
     // Copy the files listed in Secretfile to our local file system.
     for path in secretfile.files() {
-        let data = try!(credentials::file(path));
-        let mut f = try!(fs::File::create(path));
-        try!(f.write_all(data.as_bytes()));
+        // Don't overwrite a file which already exists.
+        if !Path::new(path).exists() {
+            let data = try!(credentials::file(path));
+            let mut f = try!(fs::File::create(path));
+            try!(chmod::chmod(path.clone(), 0o400));
+            try!(f.write_all(data.as_bytes()));
+        }
     }
 
     // If we were supplied with command-line arguments, treat them as a
