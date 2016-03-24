@@ -7,7 +7,7 @@ use std::env;
 use std::error;
 use std::fs;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process;
 
 mod chmod;
@@ -18,9 +18,76 @@ mod exec;
 /// convert error types.  This is a common Rust trick.
 pub type Error = Box<error::Error+Send+Sync>;
 
+/// Our command-line arguments.
+struct Args {
+    secretfile: Option<PathBuf>,
+    args: Vec<String>,
+}
+
+impl Args {
+    /// Display a usage message, and exit with the specified code.
+    fn usage(exit_code: i32) -> ! {
+        println!("\
+Usage:
+  credentials-to-env --version
+  credentials-to-env --help
+  credentials-to-env [-f <secretfile>] <app> [<args>...]
+
+Processes either the specified Secretfile, or the Secretfile in the current
+directory, loading secrets into the environment or writing them to files as
+requested.  Once this is done, it execs <app> with <args>.
+
+For more information, see https://github.com/faradayio/credentials_to_env
+");
+        process::exit(exit_code)
+    }
+
+    /// Parse our command-line arguments, and exit on errors, `--help` or
+    /// `--version`.  We use our own argument parser because this kind of
+    /// compound "forwarding to a second app" command-line tends to be more
+    /// trouble than it's worth even with off-the-shelf tools.
+    fn parse() -> Result<Args, Error> {
+        let mut args: Vec<String> = env::args().skip(1).collect();
+        let mut secretfile = None;
+        match args.get(0).map(|s| &s[..]) {
+            Some("--help") => Args::usage(0),
+            Some("--version") => {
+                // `env!` fetches compile-time env variables.
+                // CARGO_PKG_VERSION is set by Cargo during the build.
+                println!("credentials-to-env {}", env!("CARGO_PKG_VERSION"));
+                process::exit(0);
+            }
+            Some("-f") if args.len() >= 2 => {
+                secretfile = Some(Path::new(&args[1]).to_owned());
+                args.remove(0);
+                args.remove(0);
+            }
+            Some(_) => {},
+            None => {}
+        }
+
+        // Make sure we have at least one more argument, and that it
+        // doesn't start with "-".
+        if args.is_empty() || args[0].chars().next() == Some('-') {
+            Args::usage(1)
+        }
+
+        Ok(Args {
+            secretfile: secretfile,
+            args: args,
+        })
+    }
+}
+
 /// This function does all the real work, and returns any errors to main,
 /// which handles them all in one place.
 fn helper() -> Result<(), Error> {
+    // Fetch our arguments.
+    let args = try!(Args::parse());
+
+    // Get our Secretfile.
+    //
+    // TODO: Honor `-f` argument.
     let secretfile = try!(Secretfile::default());
 
     // Copy the environment variables listed in Secretfile to our local
@@ -48,13 +115,9 @@ fn helper() -> Result<(), Error> {
         }
     }
 
-    // If we were supplied with command-line arguments, treat them as a
-    // command to exec.  This will replace the currently running binary.
-    let args: Vec<String> = env::args().skip(1).collect();
-    if args.len() >= 1 {
-        let program = args[0].clone();
-        try!(exec::execvp(program, &args[0..]));
-    }
+    // Execute the command we were passed.
+    let program = args.args[0].clone();
+    try!(exec::execvp(program, &args.args));
 
     Ok(())
 }
