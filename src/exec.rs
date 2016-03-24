@@ -4,6 +4,7 @@ use errno::{Errno, errno};
 use libc;
 use std::error::{self, Error};
 use std::ffi::{CString, NulError};
+use std::iter::{IntoIterator, Iterator};
 use std::fmt;
 use std::ptr;
 
@@ -52,12 +53,14 @@ impl From<NulError> for ExecError {
 
 /// Run `program` with `args`, completely replacing the currently running
 /// program.
-pub fn execvp(program: &str, args: &[&str]) -> Result<(), ExecError> {
+pub fn execvp<'a, S, I>(program: S, args: I) -> Result<(), ExecError>
+    where S: Into<String>, I: IntoIterator, I::Item: Into<&'a String>
+{
     // Add null terminations to our strings and our argument array,
     // converting them into a C-compatible format.
-    let program_cstring = try!(CString::new(program.clone()));
-    let arg_cstrings = try!(args.iter().map(|arg| {
-        CString::new(arg.clone())
+    let program_cstring = try!(CString::new(program.into()));
+    let arg_cstrings = try!(args.into_iter().map(|arg| {
+        CString::new(&arg.into()[..])
     }).collect::<Result<Vec<_>, _>>());
     let mut arg_charptrs: Vec<_> = arg_cstrings.iter().map(|arg| {
         arg.as_bytes_with_nul().as_ptr() as *const i8
