@@ -2,7 +2,7 @@ extern crate credentials;
 extern crate errno;
 extern crate libc;
 
-use credentials::Secretfile;
+use credentials::{Client, Secretfile};
 use std::env;
 use std::error;
 use std::fs;
@@ -85,20 +85,22 @@ fn helper() -> Result<(), Error> {
     // Fetch our arguments.
     let args = try!(Args::parse());
 
-    // Get our Secretfile.
-    //
-    // TODO: Honor `-f` argument.
-    let secretfile = try!(Secretfile::default());
+    // Get our Secretfile and construct a client.
+    let secretfile = try!(match &args.secretfile {
+        &Some(ref path) => Secretfile::from_path(path),
+        &None => Secretfile::default(),
+    });
+    let mut client = try!(Client::with_secretfile(secretfile.clone()));
 
     // Copy the environment variables listed in Secretfile to our local
     // environment.
     for var in secretfile.vars() {
-        env::set_var(&var, &try!(credentials::var(&var)));
+        env::set_var(&var, &try!(client.var(&var)));
     }
 
     // Copy the files listed in Secretfile to our local file system.
     for path_str in secretfile.files() {
-        let path = Path::new(path_str);
+        let path = Path::new(&path_str);
 
         // Don't overwrite a file which already exists.
         if !path.exists() {
@@ -108,7 +110,7 @@ fn helper() -> Result<(), Error> {
             }
 
             // Write the data to a file that's only readable by us.
-            let data = try!(credentials::file(path));
+            let data = try!(client.file(path));
             let mut f = try!(fs::File::create(path));
             try!(chmod::chmod(path_str.clone(), 0o400));
             try!(f.write_all(data.as_bytes()));
