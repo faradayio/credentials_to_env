@@ -50,10 +50,10 @@ fn helper() -> Result<(), Error> {
 
     // If we were supplied with command-line arguments, treat them as a
     // command to exec.  This will replace the currently running binary.
-    let args: Vec<String> = env::args().collect();
-    if args.len() >= 2 {
-        let program = args[1].clone();
-        try!(exec::execvp(program, &args[1..]));
+    let args: Vec<String> = env::args().skip(1).collect();
+    if args.len() >= 1 {
+        let program = args[0].clone();
+        try!(exec::execvp(program, &args[0..]));
     }
 
     Ok(())

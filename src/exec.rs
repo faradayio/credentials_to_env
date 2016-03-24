@@ -54,13 +54,13 @@ impl From<NulError> for ExecError {
 /// Run `program` with `args`, completely replacing the currently running
 /// program.
 pub fn execvp<'a, S, I>(program: S, args: I) -> Result<(), ExecError>
-    where S: Into<String>, I: IntoIterator, I::Item: Into<&'a String>
+    where S: AsRef<str>, I: IntoIterator, I::Item: AsRef<str>
 {
     // Add null terminations to our strings and our argument array,
     // converting them into a C-compatible format.
-    let program_cstring = try!(CString::new(program.into()));
+    let program_cstring = try!(CString::new(program.as_ref()));
     let arg_cstrings = try!(args.into_iter().map(|arg| {
-        CString::new(&arg.into()[..])
+        CString::new(arg.as_ref())
     }).collect::<Result<Vec<_>, _>>());
     let mut arg_charptrs: Vec<_> = arg_cstrings.iter().map(|arg| {
         arg.as_bytes_with_nul().as_ptr() as *const i8
