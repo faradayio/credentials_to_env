@@ -1,5 +1,7 @@
 # `credentials-to-env`: Fetch secrets from Hashicorp's vault or elsewhere before `exec`ing a program
 
+[![Latest version](https://img.shields.io/crates/v/credentials_to_env.svg)](https://crates.io/crates/credentials_to_env) [![License](https://img.shields.io/crates/l/credentials_to_env.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/faradayio/credentials_to_env.svg?branch=master)](https://travis-ci.org/faradayio/credentials_to_env)
+
 Do you have a pre-existing program that assumes that it will receive
 secrets in either environment variables or files on disk?  Would you like
 to convert that program to work with Hashicorp's [Vault][]?
