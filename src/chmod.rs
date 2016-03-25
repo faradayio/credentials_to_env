@@ -1,8 +1,9 @@
 //! A wrapper around `chmod`.  I think there may be a version of this
 //! planned for a future version of Rust's `std`.
 //!
-//! There's some code duplication here (in the error type), but that's
-//! mostly so we can factor out `exec` later if we want.
+//! This is not an especially outstanding C wrapper, but I'm not in the
+//! mood to try to solve this problem in its full generality, so a little
+//! local wrapper like this is fine.
 
 use errno::{Errno, errno};
 use libc;
@@ -74,7 +75,7 @@ pub fn chmod<S: Into<String>>(path: S, permissions: libc::mode_t) ->
     if res < 0 {
         Err(ChmodError::Errno(errno()))
     } else {
-        // Should never happen.
+        // Everything worked fine.
         Ok(())
     }
 }

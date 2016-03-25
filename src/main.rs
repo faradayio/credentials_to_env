@@ -1,5 +1,6 @@
 extern crate credentials;
 extern crate errno;
+extern crate exec;
 extern crate libc;
 
 use credentials::{Client, Secretfile};
@@ -11,7 +12,6 @@ use std::path::{Path, PathBuf};
 use std::process;
 
 mod chmod;
-mod exec;
 
 /// A nice, generic error type which can hold any error returned by any
 /// library we use, and to which the `try!` macro will automatically
@@ -119,9 +119,7 @@ fn helper() -> Result<(), Error> {
 
     // Execute the command we were passed.
     let program = args.args[0].clone();
-    try!(exec::execvp(program, &args.args));
-
-    Ok(())
+    Err(From::from(exec::execvp(program, &args.args)))
 }
 
 /// An error-handling wrapper around `helper`.
