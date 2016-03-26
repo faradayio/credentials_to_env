@@ -4,7 +4,7 @@ version = "0.3.1"
 dependencies = [
  "credentials 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "errno 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "exec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "exec 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -56,7 +56,7 @@ dependencies = [
 
 [[package]]
 name = "exec"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "errno 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",

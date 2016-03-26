@@ -20,6 +20,7 @@ pub type Error = Box<error::Error+Send+Sync>;
 /// Our command-line arguments.
 struct Args {
     secretfile: Option<PathBuf>,
+    program: String,
     args: Vec<String>,
 }
 
@@ -70,9 +71,11 @@ For more information, see https://github.com/faradayio/credentials_to_env
         if args.is_empty() || args[0].chars().next() == Some('-') {
             Args::usage(1)
         }
+        let program = args.remove(0);
 
         Ok(Args {
             secretfile: secretfile,
+            program: program,
             args: args,
         })
     }
@@ -118,8 +121,8 @@ fn helper() -> Result<(), Error> {
     }
 
     // Execute the command we were passed.
-    let program = args.args[0].clone();
-    Err(From::from(exec::execvp(program, &args.args)))
+    let err = exec::Command::new(&args.program).args(&args.args).exec();
+    Err(From::from(err))
 }
 
 /// An error-handling wrapper around `helper`.
