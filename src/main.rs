@@ -10,8 +10,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process;
-
-mod chmod;
+use std::os::unix::fs::PermissionsExt;
 
 /// A nice, generic error type which can hold any error returned by any
 /// library we use, and to which the `try!` macro will automatically
@@ -112,7 +111,8 @@ fn helper() -> Result<(), Error> {
             // Write the data to a file that's only readable by us.
             let data = try!(client.file(path));
             let mut f = try!(fs::File::create(path));
-            try!(chmod::chmod(path_str.clone(), 0o400));
+            try!(fs::set_permissions(&path_str,
+                                     PermissionsExt::from_mode(0o400)));
             try!(f.write_all(data.as_bytes()));
         }
     }
