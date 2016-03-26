@@ -1,7 +1,5 @@
 extern crate credentials;
-extern crate errno;
 extern crate exec;
-extern crate libc;
 
 use credentials::{Client, Secretfile};
 use std::env;

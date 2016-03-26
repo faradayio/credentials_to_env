@@ -3,9 +3,7 @@ name = "credentials_to_env"
 version = "0.3.1"
 dependencies = [
  "credentials 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "errno 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "exec 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
