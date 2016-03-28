@@ -1,7 +1,7 @@
 extern crate credentials;
 extern crate exec;
 
-use credentials::{Client, Secretfile};
+use credentials::{Client, Options, Secretfile};
 use std::env;
 use std::error;
 use std::fs;
@@ -17,6 +17,7 @@ pub type Error = Box<error::Error+Send+Sync>;
 
 /// Our command-line arguments.
 struct Args {
+    allow_override: bool,
     secretfile: Option<PathBuf>,
     program: String,
     args: Vec<String>,
@@ -29,11 +30,16 @@ impl Args {
 Usage:
   credentials-to-env --version
   credentials-to-env --help
-  credentials-to-env [-f <secretfile>] <app> [<args>...]
+  credentials-to-env [--no-env-override] [-f <secretfile>] <app> [<args>...]
 
-Processes either the specified Secretfile, or the Secretfile in the current
-directory, loading secrets into the environment or writing them to files as
-requested.  Once this is done, it execs <app> with <args>.
+Processes a Secretfile, loading secrets into the environment or writing
+them to files as requested.  Once this is done, it execs <app> with <args>.
+
+Options:
+  --no-env-override  Do not allow environement variables to override
+                     Secretfile contents.
+  -f <secretfile>    Use the specified Secretfile.  Defaults to
+                     `Secretfile` in the current directory.
 
 For more information, see https://github.com/faradayio/credentials_to_env
 ");
@@ -44,24 +50,46 @@ For more information, see https://github.com/faradayio/credentials_to_env
     /// `--version`.  We use our own argument parser because this kind of
     /// compound "forwarding to a second app" command-line tends to be more
     /// trouble than it's worth even with off-the-shelf tools.
-    fn parse() -> Result<Args, Error> {
-        let mut args: Vec<String> = env::args().skip(1).collect();
+    fn parse<I>(arguments: I) -> Args
+        where I: IntoIterator, I::Item: AsRef<str>
+    {
+        let mut args: Vec<String> =
+            arguments.into_iter().map(|s| s.as_ref().to_owned()).collect();
         let mut secretfile = None;
-        match args.get(0).map(|s| &s[..]) {
-            Some("--help") => Args::usage(0),
-            Some("--version") => {
-                // `env!` fetches compile-time env variables.
-                // CARGO_PKG_VERSION is set by Cargo during the build.
-                println!("credentials-to-env {}", env!("CARGO_PKG_VERSION"));
-                process::exit(0);
+        let mut allow_override = true;
+        while !args.is_empty() {
+            match args[0].as_ref() {
+                "--help" => Args::usage(0),
+                "--version" => {
+                    // `env!` fetches compile-time env variables.
+                    // CARGO_PKG_VERSION is set by Cargo during the build.
+                    println!("credentials-to-env {}", env!("CARGO_PKG_VERSION"));
+                    process::exit(0);
+                }
+                "-f" if args.len() >= 2 => {
+                    secretfile = Some(Path::new(&args[1]).to_owned());
+                    args.remove(0);
+                    args.remove(0);
+                }
+                "--no-env-override" => {
+                    allow_override = false;
+                    args.remove(0);
+                }
+                "--" => {
+                    args.remove(0);
+                    break;
+                }
+                _ => {
+                    if args[0].chars().next() == Some('-') {
+                        // Unknown '-' argument, so bail.
+                        Args::usage(1);
+                    } else {
+                        // We've found a non-option argument, so stop
+                        // looking for options.
+                        break;
+                    }
+                }
             }
-            Some("-f") if args.len() >= 2 => {
-                secretfile = Some(Path::new(&args[1]).to_owned());
-                args.remove(0);
-                args.remove(0);
-            }
-            Some(_) => {},
-            None => {}
         }
 
         // Make sure we have at least one more argument, and that it
@@ -71,26 +99,46 @@ For more information, see https://github.com/faradayio/credentials_to_env
         }
         let program = args.remove(0);
 
-        Ok(Args {
+        Args {
+            allow_override: allow_override,
             secretfile: secretfile,
             program: program,
             args: args,
-        })
+        }
     }
+}
+
+#[test]
+fn test_args_parse() {
+    let args = Args::parse(&["foo"]);
+    assert_eq!(true, args.allow_override);
+    assert_eq!(None, args.secretfile);
+    assert_eq!("foo", args.program);
+    assert_eq!(vec!() as Vec<String>, args.args);
+
+    let args = Args::parse(&["--no-env-override", "-f", "/app/Secretfile",
+                             "--", "foo", "--bar"]);
+    assert_eq!(false, args.allow_override);
+    assert_eq!(Some(Path::new("/app/Secretfile").to_owned()), args.secretfile);
+    assert_eq!("foo", args.program);
+    assert_eq!(vec!("--bar"), args.args);
 }
 
 /// This function does all the real work, and returns any errors to main,
 /// which handles them all in one place.
 fn helper() -> Result<(), Error> {
     // Fetch our arguments.
-    let args = try!(Args::parse());
+    let args = Args::parse(env::args().skip(1));
 
     // Get our Secretfile and construct a client.
     let secretfile = try!(match &args.secretfile {
         &Some(ref path) => Secretfile::from_path(path),
         &None => Secretfile::default(),
     });
-    let mut client = try!(Client::with_secretfile(secretfile.clone()));
+    let options = Options::default()
+        .secretfile(secretfile.clone())
+        .allow_override(args.allow_override);
+    let mut client = try!(Client::new(options));
 
     // Copy the environment variables listed in Secretfile to our local
     // environment.
