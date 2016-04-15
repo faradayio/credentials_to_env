@@ -5,7 +5,7 @@ license = "MIT/Apache-2.0"
 name = "credentials_to_env"
 readme = "README.md"
 repository = "https://github.com/faradayio/credentials_to_env"
-version = "0.4.0"
+version = "0.4.1"
 
 [[bin]]
 name = "credentials-to-env"
