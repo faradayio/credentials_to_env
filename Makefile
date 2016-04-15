@@ -20,11 +20,11 @@ image:
 
 # Compile in our sandbox.
 build:
-	$(SANDBOXED) cargo build --release
+	$(SANDBOXED) cargo build --release --target=x86_64-unknown-linux-musl
 
 package: build
 	rm -f $(ZIP)
-	zip -j $(ZIP) target/release/credentials-to-env
+	zip -j $(ZIP) target/x86_64-unknown-linux-musl/release/credentials-to-env
 
 clean:
 	cargo clean
