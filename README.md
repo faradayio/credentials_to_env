@@ -2,6 +2,8 @@
 
 [![Latest version](https://img.shields.io/crates/v/credentials_to_env.svg)](https://crates.io/crates/credentials_to_env) [![License](https://img.shields.io/crates/l/credentials_to_env.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/faradayio/credentials_to_env.svg?branch=master)](https://travis-ci.org/faradayio/credentials_to_env)
 
+[Static binary releases](https://github.com/faradayio/credentials_to_env/releases)
+
 Do you have a pre-existing program that assumes that it will receive
 secrets in either environment variables or files on disk?  Would you like
 to convert that program to work with Hashicorp's [Vault][]?
@@ -42,9 +44,8 @@ Vault.
 
 ## Building a portable binary
 
-If you want to build a single binary which works on Debian 7.0 and Ubuntu
-14.04 (and probably other recent distros), make sure you have Docker
-configured, and run:
+If you want to build a single, static binary which works on any reasonably
+modern x86_64 Linux distro, run:
 
 ```sh
 cargo clean
@@ -52,13 +53,9 @@ make image
 make
 ```
 
-This isn't quite as portable as a typical Go binary, but it should
-theoretically work if you have the C library (which is always there) and
-you install OpenSSL:
-
-```sh
-sudo apt-get install libssl1.0.0
-```
+This will build a binary using [musl][], which doesn't require any
+particular set of libraries at runtime.
 
 [Vault]: https://www.vaultproject.io/
 [credentials]: http://docs.randomhacks.net/credentials/
+[musl]: http://www.musl-libc.org/
