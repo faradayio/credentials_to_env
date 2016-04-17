@@ -7,20 +7,16 @@
 # distribution which has a fairly old libc.  With luck, this should allow
 # us to use the same binary on pretty much any modern Linux distribution,
 # because it will only rely on an ancient build of libc.
-SANDBOXED = docker run -v `pwd`:/src --rm credentials-to-env-dev
+SANDBOXED = docker run -v `pwd`:/home/rust/src --rm ekidd/rust-musl-builder
 
 # The name the zip archive we use for binary releases.
 ZIP = credentials-to-env-$(shell git describe --tags)-$(shell uname -s | tr '[:upper:]' '[:lower:]')-$(shell uname -p).zip
 
 all: build
 
-# Build the docker image we'll need for our sandbox.
-image:
-	docker build -t credentials-to-env-dev .
-
 # Compile in our sandbox.
 build:
-	$(SANDBOXED) cargo build --release --target=x86_64-unknown-linux-musl
+	$(SANDBOXED) cargo build --release
 
 package: build
 	rm -f $(ZIP)

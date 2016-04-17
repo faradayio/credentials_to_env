@@ -48,14 +48,14 @@ If you want to build a single, static binary which works on any reasonably
 modern x86_64 Linux distro, run:
 
 ```sh
-cargo clean
-make image
 make
 ```
 
 This will build a binary using [musl][], which doesn't require any
-particular set of libraries at runtime.
+particular set of libraries at runtime.  See [rust-musl-builder][] for more
+details.
 
 [Vault]: https://www.vaultproject.io/
 [credentials]: http://docs.randomhacks.net/credentials/
 [musl]: http://www.musl-libc.org/
+[rust-musl-builder]: https://github.com/emk/rust-musl-builder
