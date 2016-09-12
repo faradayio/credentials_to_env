@@ -42,20 +42,38 @@ yourself, which is handy if you call `credentials-to-env` inside a Docker
 container, but want to temporarily override the secrets you'd get from
 Vault.
 
-## Building a portable binary
+## Development notes
 
-If you want to build a single, static binary which works on any reasonably
-modern x86_64 Linux distro, run:
+Pull requests are welcome!  If you're not sure whether your idea would fit
+into the project's vision, please feel free to file an issue and ask us.
+
+**To make an official release,** you need to be a maintainer, and you need
+to have `cargo publish` permissions.  If this is the case, first edit
+`Cargo.toml` to bump the version number, then regenerate `Cargo.lock`
+using:
 
 ```sh
-make
+cargo build
 ```
 
-This will build a binary using [musl][], which doesn't require any
-particular set of libraries at runtime.  See [rust-musl-builder][] for more
-details.
+Commit the release, using a commit message of the format:
+
+```txt
+v<VERSION>: <SUMMARY>
+
+<RELEASE NOTES>
+```
+
+Then run:
+
+```
+git tag v$VERSION
+git push; git push --tags
+cargo publish
+```
+
+This will rebuild the official binaries using Travis CI, and upload a new version of
+the crate to [crates.io](https://crates.io/).
 
 [Vault]: https://www.vaultproject.io/
 [credentials]: http://docs.randomhacks.net/credentials/
-[musl]: http://www.musl-libc.org/
-[rust-musl-builder]: https://github.com/emk/rust-musl-builder
