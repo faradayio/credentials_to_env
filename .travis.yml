@@ -1,15 +1,36 @@
 language: rust
 sudo: required
+os:
+- linux
+- osx
 rust:
 - stable
-- beta
-- nightly
+services:
+- docker
+matrix:
+  include:
+  - os: linux
+    rust: beta
+  - os: linux
+    rust: nightly
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
-  export PATH=$HOME/.local/bin:$PATH
+  export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
 script:
 - |
   travis-cargo build &&
   travis-cargo test &&
   travis-cargo doc
+before_deploy: "./build-release credentials-to-env ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
+deploy:
+  provider: releases
+  api_key:
+    secure: BUw4Tg6BCxR4ud/v0P/O3/hyj5yu2YEkyaS8vO1K/jH9s6UIvUcnxNGgAWnfWVr/v1mjZgkH8be1Cloq7eZuqT0aULzqcwQ+OJ10VFgX/xYIxaI7ZLyDfXDiSjPnVsNS6Tjo0bYov0yWFKCycbFdQxr0G4KTfnmkwUtXWFunJCEkx/aTw6nZ9df9vG2qSTdLyN8hpT0BIIfrSPzl9Atdg1N4X4ePNRfL5r7i+aCpTxRyVRUPtSwP/c1cWS4yDhITg6pZHR2R3gOVKTbEZwyC5G5P8ILhlmPJmBq3gKdB/oWbBpCBV4cbIccXRqPIJilqMADDPc2Ii6jJ7taVSNzWHkzxAV2QVOw+4mDx5pjCRqs9T5/3C1HPtfirDPgKMjgYKrfinTJePxAriL/lHZqz26aEYWu85SDHcgg9vPrQu+NAaJ/HQj4ZzmQrvenvt9eysIPSkhyuUGaBjPYjV8nmpYpSlKPoq0lgdy4O99a3D8bT/D1/oYcu0AzQgMeOV+9ePs/I+DHMNFOy2gtOnHmcU8Ayt7g+4psjCrN1GLcov+nfZabvP08bwOCd3wQnKVfuJyE9Mw491eO6XYNAnI6+nPygUmZDJYO9kkHBq12HQFesPsiIHmZUo+7cfV7ifH3zIYwHpxuKYnGPffApt9naz9yaJw6bgHntdYG5KknyCmI=
+  file_glob: true
+  file: "credentials-to-env-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.*"
+  skip_cleanup: true
+  on:
+    repo: faradayio/credentials_to_env
+    rust: stable
+    tags: true
