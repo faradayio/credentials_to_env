@@ -47,6 +47,10 @@ Vault.
 Pull requests are welcome!  If you're not sure whether your idea would fit
 into the project's vision, please feel free to file an issue and ask us.
 
+**To build, you'll need to set up your OpenSSL paths first,** as described
+by the [Rust OpenSSL](https://github.com/sfackler/rust-openssl#osx)
+project.
+
 **To make an official release,** you need to be a maintainer, and you need
 to have `cargo publish` permissions.  If this is the case, first edit
 `Cargo.toml` to bump the version number, then regenerate `Cargo.lock`
