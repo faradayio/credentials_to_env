@@ -1,19 +1,13 @@
 extern crate credentials;
 extern crate exec;
 
-use credentials::{Client, Options, Secretfile};
+use credentials::{ChainErr, Client, Options, Result, Secretfile};
 use std::env;
-use std::error;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process;
 use std::os::unix::fs::PermissionsExt;
-
-/// A nice, generic error type which can hold any error returned by any
-/// library we use, and to which the `try!` macro will automatically
-/// convert error types.  This is a common Rust trick.
-pub type Error = Box<error::Error+Send+Sync>;
 
 /// Our command-line arguments.
 struct Args {
@@ -126,7 +120,7 @@ fn test_args_parse() {
 
 /// This function does all the real work, and returns any errors to main,
 /// which handles them all in one place.
-fn helper() -> Result<(), Error> {
+fn helper() -> Result<()> {
     // Fetch our arguments.
     let args = Args::parse(env::args().skip(1));
 
@@ -168,13 +162,20 @@ fn helper() -> Result<(), Error> {
 
     // Execute the command we were passed.
     let err = exec::Command::new(&args.program).args(&args.args).exec();
-    Err(From::from(err))
+    Err(err).chain_err(|| "could not execute specified program")
 }
 
 /// An error-handling wrapper around `helper`.
 fn main() {
     if let Err(err) = helper() {
-        writeln!(&mut io::stderr(), "Error: {}", err).unwrap();
+        write!(io::stderr(), "ERROR").unwrap();
+        for e in err.iter() {
+            write!(io::stderr(), ": {}", e).unwrap();
+        }
+        writeln!(io::stderr(), "").unwrap();
+        if let Some(backtrace) = err.backtrace() {
+            write!(io::stderr(), "{:?}\n", backtrace).unwrap();
+        }
         process::exit(1);
     }
 }
