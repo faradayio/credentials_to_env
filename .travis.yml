@@ -13,18 +13,16 @@ matrix:
     rust: beta
   - os: linux
     rust: nightly
-before_install:
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew outdated openssl || brew upgrade openssl; fi
 before_script:
 - |
-  pip install 'travis-cargo<0.2' --user &&
-  export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
+  # Workaround for an issue with Cargo nightlies; should go away around
+  # 30 Nov 2016.
+  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+  fi
 script:
-- |
-  travis-cargo build &&
-  travis-cargo test &&
-  travis-cargo doc
+- cargo build
+- cargo test
 before_deploy: "./build-release credentials-to-env ${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
 deploy:
   provider: releases
