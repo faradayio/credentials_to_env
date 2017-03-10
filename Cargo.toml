@@ -11,7 +11,7 @@ version = "0.4.4"
 name = "credentials-to-env"
 
 [dependencies]
-credentials = "0.5.0"
+credentials = "0.6.0"
 exec = "0.2.0"
 
 [features]
