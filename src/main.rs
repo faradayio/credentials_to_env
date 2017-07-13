@@ -1,7 +1,7 @@
 extern crate credentials;
 extern crate exec;
 
-use credentials::{ChainErr, Client, Options, Result, Secretfile};
+use credentials::{Client, Options, Result, ResultExt, Secretfile};
 use std::env;
 use std::fs;
 use std::io::{self, Write};
