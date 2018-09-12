@@ -1,10 +1,14 @@
+#[macro_use]
+extern crate common_failures;
 extern crate credentials;
 extern crate exec;
+extern crate failure;
 
-use credentials::{Client, Options, Result, ResultExt, Secretfile};
+use common_failures::prelude::*;
+use credentials::{Client, Options, Secretfile};
 use std::env;
 use std::fs;
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::os::unix::fs::PermissionsExt;
@@ -120,7 +124,7 @@ fn test_args_parse() {
 
 /// This function does all the real work, and returns any errors to main,
 /// which handles them all in one place.
-fn helper() -> Result<()> {
+fn run() -> Result<()> {
     // Fetch our arguments.
     let args = Args::parse(env::args().skip(1));
 
@@ -160,22 +164,13 @@ fn helper() -> Result<()> {
         }
     }
 
-    // Execute the command we were passed.
-    let err = exec::Command::new(&args.program).args(&args.args).exec();
-    Err(err).chain_err(|| "could not execute specified program")
+    // Execute the command we were passed. This returns an error if it returns
+    // at all, which we wrap in `Err` to make a `Result` (for easier
+    // processing).
+    Err(exec::Command::new(&args.program).args(&args.args).exec())
+        .context("could not execute specified program")
+        .map_err(|e| e.into())
 }
 
-/// An error-handling wrapper around `helper`.
-fn main() {
-    if let Err(err) = helper() {
-        write!(io::stderr(), "ERROR").unwrap();
-        for e in err.iter() {
-            write!(io::stderr(), ": {}", e).unwrap();
-        }
-        writeln!(io::stderr(), "").unwrap();
-        if let Some(backtrace) = err.backtrace() {
-            write!(io::stderr(), "{:?}\n", backtrace).unwrap();
-        }
-        process::exit(1);
-    }
-}
+/// An error-handling wrapper around `run`.
+quick_main!(run);
