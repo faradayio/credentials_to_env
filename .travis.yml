@@ -13,13 +13,6 @@ matrix:
     rust: beta
   - os: linux
     rust: nightly
-before_script:
-- |
-  # Workaround for an issue with Cargo nightlies; should go away around
-  # 30 Nov 2016.
-  if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-    export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-  fi
 script:
 - cargo build
 - cargo test
