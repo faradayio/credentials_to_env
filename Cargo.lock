@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "credentials_to_env"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "common_failures 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "credentials 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
