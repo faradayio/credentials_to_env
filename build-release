@@ -17,6 +17,8 @@
 set -euo pipefail
 
 rust-musl-builder() {
+    mkdir -p target/release
+    chmod --recursive a+rwx target
     docker run --rm -it -v "$(pwd)":/home/rust/src ekidd/rust-musl-builder "$@"
 }
 
